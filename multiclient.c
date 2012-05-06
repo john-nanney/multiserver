@@ -39,10 +39,13 @@ static char recvfilename[FILENAMESIZE];
 
 void usage(void)
 {
-	printf("\nUsage: %s [ -p PORT ] [ -g GROUP ]\n\n", progname?progname:"multiserver");
+	printf("\nUsage: %s [ -p PORT ] [ -g GROUP ] [ -t TIMEOUT ] [ -f FROM_PORT ] [ -s SERVER_PORT ] [ -o OUTPUTFILENAME ]\n\n", progname?progname:"multiserver");
 	printf("PORT is the multicast port to listen on, defaults to %d\n", DEFAULT_PORT);
 	printf("GROUP is the multicast address, defaults to \"%s\"\n", DEFAULT_GROUP);
 	printf("TIMEOUT is the quiet time in milliseconds, defaults to %d\n", DEFAULT_TIMEOUT);
+	printf("FROM_PORT is the originating port number, not usually needed unless debugging.\n");
+	printf("SERVER_PORT is the port for the block map server, defaults to %d\n", DEFAULT_SERVER_PORT);
+	printf("OUTPUTFILENAME allows the file name to override what the block server sends.\n");
 	puts("\n");
 	exit(EXIT_FAILURE);
 }
