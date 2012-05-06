@@ -54,10 +54,13 @@ static int timeoutms = 100;
 static char *progname = NULL;
 
 void usage(void) {
-	printf("\nUsage: %s -f FILENAME [ -p PORT ] [ -g GROUP ]\n\n", progname?progname:"multiserver");
+	printf("\nUsage: %s -f FILENAME [ -p PORT ] [ -g GROUP ] [ -s SERVER_PORT ] [ -d INTERPACKET_DELAY ]\n\n", progname?progname:"multiserver");
 	printf("FILENAME is the file to serve.\n");
 	printf("PORT is the multicast port to serve on, defaults to %d\n", DEFAULT_PORT);
-	printf("GROUP is the multicast address, defaults to \"%s\"\n\n", DEFAULT_GROUP);
+	printf("GROUP is the multicast address, defaults to \"%s\"\n", DEFAULT_GROUP);
+	printf("SERVER_PORT is the block map server port, defaults to %d\n", DEFAULT_SERVER_PORT);
+	printf("INTERPACKET_DELAY is the delay in milliseconds between multicast packets. This is only for debugging, never actually use it.\n");
+	puts("\n");
 	exit(EXIT_FAILURE);
 }
 
