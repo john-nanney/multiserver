@@ -46,4 +46,4 @@ Freely available under the terms of the GNU General Public License version 2.
 Bugs
 ----
 
-The help messages aren't complete.
+Could be. Send a bug report, or better yet a patch. Also, the code isn't well commented.
