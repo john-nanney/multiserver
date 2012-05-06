@@ -1,0 +1,10 @@
+
+# Ignore dep directory
+.d/
+
+# Ignore objects
+*.o
+
+# Ignore build targets
+multiclient
+multiserver
