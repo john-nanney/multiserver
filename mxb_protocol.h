@@ -19,6 +19,7 @@
 #define MAX_PACKET_SIZE (2048)
 #define FILENAMESIZE (2048)
 
+/* Packet header */
 typedef struct {
     uint32_t magic;
     uint16_t op;
@@ -26,25 +27,38 @@ typedef struct {
     uint32_t blockid;
 } mxbp_header_t;
 
+/* Packet structure */
 typedef struct {
     mxbp_header_t header;
     uint8_t data[1];
 } mxbp_packet_t;
 
+/* Info contained in map packet */
 typedef struct {
     uint64_t filesize;
     uint32_t blocksize;
     uint32_t nblocks;
 } mxbp_map_t;
 
+/* Packed identifier */
 typedef enum {
-    MXBP_INVALID = 0, /* must be first */
+	/* must be first */
+    MXBP_INVALID = 0,
+
+	/* Client requesting file info */
     MXBP_MAPREQ,
+
+	/* File info from server */
     MXBP_BLOCKDESC,
+
+	/* Client requesting range of blocks */
     MXBP_BLOCKREQ,
+
+	/* Block data */
     MXBP_BLOCK,
 
-    MXBP_LAST /* must be last */
+	/* must be last */
+    MXBP_LAST
 } mxbp_op_t;
 
 #endif /* _MXB_PROTOCOL_H */
