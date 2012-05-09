@@ -43,7 +43,31 @@ License
 
 Freely available under the terms of the GNU General Public License version 2.
 
+How it Works
+------------
+
+The server starts, prepares a block map for the file to serve, and waits for block requests.
+
+The client starts and sends a map request (once per second) until it receives a block description. It then creates a map of the blocks in the file
+
+The client listens on the multicast channel. If the channel is quiet for a while (default 200 milliseconds) it sends a block request with the first and last empty blocks as endpoints.
+
+The server receives a block request and starts serving blocks in order. Multiple pending requests are coalesced.
+
+The client receives blocks and stores them. The client will create and send a new block request if the line goes quiet.
+
+When all blocks are filled in the client exits.
+
 Bugs
 ----
 
 Could be. Send a bug report, or better yet a patch. Also, the code isn't well commented.
+
+The client filesystem must support sparse files. This is not needed if writing directly to a disk device.
+
+TODO
+----
+
+Support creating a file on a filesystem that does not support sparse files.
+
+Support jumbo packets.
