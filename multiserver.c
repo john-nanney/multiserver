@@ -53,6 +53,9 @@ static int timeoutms = 100;
 
 static char *progname = NULL;
 
+/* 100 read errors in a row will cause an error exit. */
+static int read_error_count_max = 100;
+
 void usage(void) {
 	printf("\nUsage: %s -f FILENAME [ -p PORT ] [ -g GROUP ] [ -s SERVER_PORT ] [ -d INTERPACKET_DELAY ]\n\n", progname?progname:"multiserver");
 	printf("FILENAME is the file to serve.\n");
@@ -246,6 +249,7 @@ void data_server_thread(void)
 	off64_t bytes;
 	uint32_t start;
 	uint32_t end;
+	int read_error_count = 0;
 
 	if(!(block_packet_buffer = malloc(sizeof(mxbp_header_t) + MXBP_BLOCKSIZE))) {
 		printf("Could not allocate transmit buffer %ld bytes: %s\n", sizeof(mxbp_header_t) + MXBP_BLOCKSIZE, strerror(errno));
@@ -308,11 +312,23 @@ void data_server_thread(void)
 		} else {
 			lseek64(filefd, 0UL, SEEK_SET);
 		}
+
+		read_error_count = 0;
+
 		for(x = start; x <= end; ++x) {
 			bytes = read(filefd, block_packet->data, MXBP_BLOCKSIZE);
 			if(bytes == -1) {
 				printf("Error reading file: %s\n", strerror(errno));
+				if(++read_error_count > read_error_count_max) {
+					printf("Too many failures (%d), bailing out.\n", read_error_count);
+					exit(EXIT_FAILURE);
+				}
+				continue;
 			}
+
+			/* reset the read error count */
+			read_error_count = 0;
+
 			block_packet->header.size = htobe16(bytes);
 			block_packet->header.blockid = htobe32(x);
 			if (sendto(sock, block_packet, sizeof(block_packet->header) + bytes, 0, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
