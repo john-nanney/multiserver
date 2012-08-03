@@ -32,8 +32,7 @@ static char recvfilename[FILENAMESIZE];
 
 void usage(void)
 {
-	printf
-	    ("\nUsage: %s [ -p PORT ] [ -g GROUP ] [ -t TIMEOUT ] [ -f FROM_PORT ] [ -s SERVER_PORT ] [ -o OUTPUTFILENAME ]\n\n",
+	printf("\nUsage: %s [ -p PORT ] [ -g GROUP ] [ -t TIMEOUT ] [ -f FROM_PORT ] [ -s SERVER_PORT ] [ -o OUTPUTFILENAME ] [ -n ]\n\n",
 	     progname ? progname : "multiserver");
 	printf("PORT is the multicast port to listen on, defaults to %d\n",
 	       DEFAULT_PORT);
@@ -41,13 +40,12 @@ void usage(void)
 	       DEFAULT_GROUP);
 	printf("TIMEOUT is the quiet time in milliseconds, defaults to %d\n",
 	       DEFAULT_TIMEOUT);
-	printf
-	    ("FROM_PORT is the originating port number, not usually needed unless debugging.\n");
-	printf
-	    ("SERVER_PORT is the port for the block map server, defaults to %d\n",
+	printf("FROM_PORT is the originating port number, not usually needed unless debugging.\n");
+	printf("SERVER_PORT is the port for the block map server, defaults to %d\n",
 	     DEFAULT_SERVER_PORT);
-	printf
-	    ("OUTPUTFILENAME allows the file name to override what the block server sends.\n");
+	printf("OUTPUTFILENAME allows the file name to override what the block server sends.\n");
+	printf("-n specifies the filesystem does not support sparse files.\n");
+	printf("Do not use when writing directory to a disk.\n");
 	puts("\n");
 	exit(EXIT_FAILURE);
 }
@@ -221,13 +219,14 @@ int main(int argc, char *argv[])
 	int c;
 	int rv;
 	int fd;
+	unsigned int no_sparse = 0;
 	int timeoutms = DEFAULT_TIMEOUT;
 	struct epoll_event ev;
 	struct epoll_event events[10];
 
 	progname = strdup(argv[0]);
 
-	while ((c = getopt(argc, argv, "g:p:f:s:t:o:h")) != -1) {
+	while ((c = getopt(argc, argv, "g:p:f:s:t:o:nh")) != -1) {
 		switch (c) {
 		case 'g':
 			if (group) {
@@ -261,6 +260,10 @@ int main(int argc, char *argv[])
 				free(outputname);
 			}
 			outputname = strdup(optarg);
+			break;
+
+		case 'n':
+			no_sparse = 1;
 			break;
 
 		default:
@@ -353,6 +356,22 @@ int main(int argc, char *argv[])
 	     open(cp, O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE, 0644)) < 0) {
 		printf("Could not open %s : %s\n", cp, strerror(errno));
 		exit(EXIT_FAILURE);
+	}
+
+	if (no_sparse) {
+		/* Cannot use a sparse file, so now create a big zeroed file. */
+		char zeros[MXBP_BLOCKSIZE];
+		int bcount;
+
+		memset(zeros, 0, sizeof(zeros));
+		for (bcount = 0; bcount <= mapdesc.nblocks; ++bcount) {
+			if (!write(fd, zeros, MXBP_BLOCKSIZE) != MXBP_BLOCKSIZE) {
+				printf("Failed to write block %d: %s (continuing anyway)\n", bcount, strerror(errno));
+			}
+		}
+		/* Rewind, just in case */
+		lseek(fd, 0, SEEK_SET);
+
 	}
 
 	if ((sock = get_multicast_socket(group, port)) < 0) {
