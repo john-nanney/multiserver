@@ -1,11 +1,6 @@
 
 #define _LARGEFILE64_SOURCE
 
-#ifndef __USE_GNU
-#define __USE_GNU
-/* For mkostemp() from stdlib.h */
-#endif				/* __USE_GNU */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,7 +12,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <sys/epoll.h>
 #include <endian.h>
@@ -120,14 +114,6 @@ void send_block_req(int s)
 	blockreq->header.op = htobe16(MXBP_BLOCKREQ);
 	blockreq->header.size = htobe16(sizeof(uint32_t) * 2);
 	up = (uint32_t *) blockreq->data;
-
-	{
-		char template[1024];
-		strcpy(template, "blocklist_XXXXXX.bin");
-		int fd = mkostemp(template, O_CREAT);
-		write(fd, blockmap, mapdesc.nblocks);
-		close(fd);
-	}
 
 	/* Find first empty block. */
 	for (x = 0; x < mapdesc.nblocks; ++x) {
